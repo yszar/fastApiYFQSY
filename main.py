@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import uuid
@@ -7,6 +8,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from redis import StrictRedis
+from starlette.requests import Request
+from starlette.responses import Response
 
 import resp_code
 from mytools import Video
@@ -111,6 +114,45 @@ async def get_video_info(url: str):
         return resp_code.resp_200(data=var)
     else:
         return resp_code.resp_400(message="errno", data="errno")
+
+
+@app.get("/v1/wx/video-file")
+async def get_video_file(url: str, req: Request):
+    """透传 API"""
+    # host = "http://example.intranet"
+    # url = "{}/other/{}".format(host, other_path)
+    # body = bytes(await req.body()) or None
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 ("
+        "KHTML, like Gecko) "
+        "Chrome/51.0.2704.63 Safari/537.36"
+    }
+    r = requests.request(
+        method="get",
+        url=url,
+        headers=headers,
+        # headers={
+        #     "Cookie": req.headers.get("cookie") or "",
+        #     "Content-Type": req.headers.get("Content-Type"),
+        # },
+        # params=req.query_params,
+        # data=body,
+        stream=True,
+        # allow_redirects=False,
+    )
+    t = datetime.datetime.now()
+    t = t.strftime("%Y%m%d%H%M%S")
+    # h = dict(r.headers)
+    # h.pop("Content-Length", None)
+    return Response(
+        r.content,
+        media_type="video/mp4",
+        headers={
+            "Content-Type": "application/force-download;",
+            "Content-Disposition": f"attachment; filename={t}.mp4",
+            "Content-Length": f'{r.headers["Content-Length"]}',
+        },
+    )
 
 
 if __name__ == "__main__":

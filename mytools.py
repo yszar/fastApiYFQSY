@@ -179,9 +179,4 @@ class Video:
 
 
 if __name__ == "__main__":
-    input_url = find_url(
-        "2.02 rRX:/ 复制打开抖音，看看【酱油白米饭的作品】《三十六计》的什么计？# 全民抖包袱 # 谁才是搞笑王... https://v.douyin.com/jWXJXef/"
-    )
-    v = Video(input_url)
-    v.douyin()
-    var = Video.video_info
+    pass
