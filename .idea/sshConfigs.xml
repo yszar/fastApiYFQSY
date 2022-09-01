@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="43.143.17.36" id="c5e9c88c-3f15-4b54-9fa8-ce1fcd860389" keyPath="C:\Users\yszar_12865458409803\Downloads\yszar" port="22" nameFormat="DESCRIPTIVE" username="root" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

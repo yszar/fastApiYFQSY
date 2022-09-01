@@ -1,5 +1,15 @@
+import json
+import os
+import uuid
+
+import requests
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
+from redis import StrictRedis
+
+import resp_code
+from mytools import Video
 
 description = """
 ChimichangApp API helps you do awesome stuff. 🚀
@@ -16,6 +26,8 @@ You will be able to:
 * **Read users** (_not implemented_).
 """
 
+load_dotenv(verbose=True)
+
 app = FastAPI(
     title="去水印接口",
     description=description,
@@ -29,17 +41,77 @@ app = FastAPI(
     license_info={
         "name": "Apache 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
-    },)
+    },
+)
+
+# --------env-----------
+APPID = os.getenv("APPID")
+SECRET = os.getenv("SECRET")
+# TODO: 部署正式环境记得换.env中的内容
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT"))
+REDIS_PASS = os.getenv("REDIS_PASS")
+
+
+# --------env-----------
 
 
 class VideoInfo(BaseModel):
     pass
 
+
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello my API"}
 
 
-@app.get("/video")
-async def get_video_info(name: str):
-    return {"message": f"Hello {name}"}
+@app.get(
+    "/v1/wx/session/{code}",
+    summary="静默登录",
+    tags=["用户模块"],
+    response_description="响应描述？完了再写",
+)
+async def login(code: str):
+    """
+    接收用户登录凭证，返回**session_id**
+    """
+    res = requests.get(
+        url="https://api.weixin.qq.com/sns/jscode2session",
+        params={
+            "appid": APPID,
+            "secret": SECRET,
+            "js_code": code,
+            "grant_type": "authorization_code",
+        },
+    )
+    if res.status_code == 200:
+        result = json.loads(res.text)
+        session_id = uuid.uuid1().hex
+        redis = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASS)
+        redis.hset(session_id, "session_key", result["session_key"])
+        redis.hset(session_id, "openid", result["openid"])
+        redis.expire(session_id, 7200)
+        # TODO: 考虑是否写入MySQL
+        return resp_code.resp_200(data={"session": session_id})
+
+    else:
+        return resp_code.resp_400(message="errno", data="errno")
+
+
+@app.get("/v1/wx/video-info")
+async def get_video_info(url: str):
+    # url = find_url(video_str)
+    v = Video(url)
+    match url:
+        case url if "douyin" in url:
+            v.douyin()
+        # TODO: 挨着写，还有无数个
+    if Video.status_code == 200:
+        var = Video.video_info
+        return resp_code.resp_200(data=var)
+    else:
+        return resp_code.resp_400(message="errno", data="errno")
+
+
+if __name__ == "__main__":
+    pass
