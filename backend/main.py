@@ -91,9 +91,9 @@ async def login(code: str):
         result = json.loads(res.text)
         session_id = uuid.uuid1().hex
         redis = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASS)
-        await redis.hset(session_id, "session_key", result["session_key"])
-        await redis.hset(session_id, "openid", result["openid"])
-        await redis.expire(session_id, 7200)
+        redis.hset(session_id, "session_key", result["session_key"])
+        redis.hset(session_id, "openid", result["openid"])
+        redis.expire(session_id, 7200)
         # TODO: 考虑是否写入MySQL
         return resp_code.resp_200(data={"session": session_id})
 
