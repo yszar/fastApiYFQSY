@@ -81,7 +81,7 @@ class Video:
             play_addr = item_list["video"]["play_addr"]["url_list"][0]
             play_addr = play_addr.replace("playwm", "play")
             Video.video_info["video"] = play_addr
-            Video.video_info["cover"] = item_list["video"]["cover"]["url_list"][0]
+            Video.video_info["cover"] = item_list["video"]["cover"]["url_list"]
             Video.video_info["desc"] = item_list["desc"]
             Video.video_info["music"]["title"] = item_list["music"]["title"]
             Video.video_info["music"]["author"] = item_list["music"]["author"]
