@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from redis import StrictRedis
-from starlette.requests import Request
 from starlette.responses import Response
 
 import resp_code
@@ -116,8 +115,8 @@ async def get_video_info(url: str):
         return resp_code.resp_400(message="errno", data="errno")
 
 
-@app.get("/v1/wx/video-file")
-async def get_video_file(url: str, req: Request):
+@app.get("/v1/wx/video-image-file")
+async def get_video_file(url: str, type_str: str):
     """透传 API"""
     # host = "http://example.intranet"
     # url = "{}/other/{}".format(host, other_path)
@@ -144,12 +143,21 @@ async def get_video_file(url: str, req: Request):
     t = t.strftime("%Y%m%d%H%M%S")
     # h = dict(r.headers)
     # h.pop("Content-Length", None)
+    match type_str:
+        case 'video':
+            media_type = "video/mp4"
+            file_type = '.mp4'
+        case 'image':
+            media_type = 'image/jpeg'
+            file_type = '.jpg'
+        case _:
+            media_type = file_type = None
     return Response(
         r.content,
-        media_type="video/mp4",
+        media_type=media_type,
         headers={
             "Content-Type": "application/force-download;",
-            "Content-Disposition": f"attachment; filename={t}.mp4",
+            "Content-Disposition": f"attachment; filename={t}{file_type}",
             "Content-Length": f'{r.headers["Content-Length"]}',
         },
     )
